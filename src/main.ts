@@ -4,8 +4,8 @@ import { parseEventSpec } from "./extractor";
 import { ItineraryRenderer, EventRenderer, renderErrorPre } from "./render";
 import { DocumentPath, ItinerarySpec, EventSpec } from "./types";
 import { getEventInformation } from "./extractor";
-
 import { getArrayForArrayOrObject } from "./util";
+import { isUndefined } from "./util";
 
 import "./main.css";
 
@@ -34,7 +34,7 @@ export default class Itinerary extends Plugin {
       // If this incoming change event was for a document that we're using
       // as an event source, reload events from that source and instruct
       // dependent itineraries to update themselves.
-      if (this.eventSources[documentPath]) {
+      if (!isUndefined(this.eventSources[documentPath])) {
         await this.loadEventsFromSource(documentPath);
         this.refreshDependentItineraries(documentPath);
       }
@@ -48,8 +48,9 @@ export default class Itinerary extends Plugin {
    * from said page. **/
   refreshDependentItineraries(path: DocumentPath): void {
     for (const page of this.eventSources[path] ?? []) {
-      if (this.refreshDebouncers[page]) {
-        clearTimeout(this.refreshDebouncers[page]);
+      const debouncers = this.refreshDebouncers[page];
+      if (!isUndefined(debouncers)) {
+        clearTimeout(debouncers);
       }
       this.refreshDebouncers[page] = setTimeout(() => {
         delete this.refreshDebouncers[page];
@@ -97,14 +98,20 @@ export default class Itinerary extends Plugin {
     );
 
     // Watches for resize event, on the event for any active itineraries upadate their size.
-    this.registerEvent(this.app.workspace.on('resize', () => {
-      if (this.app.workspace.activeEditor !== null && 
-        this.itineraries[this.app.workspace.activeEditor.file.path] !== undefined) {
-        for (let itinerary of this.itineraries[this.app.workspace.activeEditor.file.path]) {
-          itinerary.updateSize();
+    this.registerEvent(
+      this.app.workspace.on("resize", () => {
+        const filePath = this.app.workspace.activeEditor?.file?.path;
+        if (
+          !isUndefined(filePath) &&
+          this.app.workspace.activeEditor !== null &&
+          !isUndefined(this.itineraries[filePath])
+        ) {
+          for (const itinerary of this.itineraries[filePath]) {
+            itinerary.updateSize();
+          }
         }
-      }
-    }));
+      })
+    );
 
     this.registerMarkdownCodeBlockProcessor(
       "itinerary",
@@ -112,7 +119,7 @@ export default class Itinerary extends Plugin {
         try {
           let tableSpec: ItinerarySpec = {};
           try {
-            tableSpec = parseYaml(itinerarySpecString) || {};
+            tableSpec = parseYaml(itinerarySpecString);
 
             if (!(tableSpec instanceof Object)) {
               throw new Error();
@@ -123,7 +130,7 @@ export default class Itinerary extends Plugin {
 
           // If no explicit sources were specified, *this* page is the
           // event source
-          if (!tableSpec.source) {
+          if (isUndefined(tableSpec.source)) {
             tableSpec.source = [ctx.sourcePath];
           }
 
@@ -134,12 +141,12 @@ export default class Itinerary extends Plugin {
           const eventSources = getArrayForArrayOrObject(tableSpec.source);
           const resolvedEventSources: string[] = [];
           for (const source of eventSources) {
-            var sourcePath: string = undefined;
+            let sourcePath: string | undefined = undefined;
             if (source.startsWith("[[") && source.endsWith("]]")) {
               const sourceName = source.slice(2, -2);
               const match = allFiles.find((f) => {
                 // Fully-qualified matches (ones in subfolders)
-                if (f.parent.path + "/" + f.basename === sourceName) {
+                if ((f.parent?.path ?? "") + "/" + f.basename === sourceName) {
                   return true;
                   // Non-fully-qualified (in the project root); note that
                   // this isn't in conflict with the above as files in
@@ -160,7 +167,8 @@ export default class Itinerary extends Plugin {
               sourcePath = source;
             }
             resolvedEventSources.push(sourcePath);
-            if (!this.eventSources[sourcePath]) {
+            const eventSourceRef = this.eventSources[sourcePath];
+            if (isUndefined(eventSourceRef)) {
               this.eventSources[sourcePath] = [];
             }
             if (!this.eventSources[sourcePath].includes(ctx.sourcePath)) {
@@ -176,7 +184,8 @@ export default class Itinerary extends Plugin {
 
           // Store the ItineraryRenderer object so we can refresh it later
           // if its events have been changed.
-          if (!this.itineraries[ctx.sourcePath]) {
+          const itineraryRef = this.itineraries[ctx.sourcePath];
+          if (isUndefined(itineraryRef)) {
             this.itineraries[ctx.sourcePath] = [];
           } else {
             // We might have stale itineraries in our list; let's remove
@@ -200,7 +209,7 @@ export default class Itinerary extends Plugin {
           // our itinerary to update itself.
           const loaderPromises: Promise<void>[] = [];
           for (const source of resolvedEventSources) {
-            if (!this.events[source]) {
+            if (isUndefined(this.events[source])) {
               loaderPromises.push(this.loadEventsFromSource(source));
             }
           }

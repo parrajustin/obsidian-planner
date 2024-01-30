@@ -33,6 +33,10 @@
   padding: 2px 5px;
   margin: 5px;
 }
+.markdown-rendered thead > tr > th, 
+.markdown-rendered tbody > tr > td {
+  overflow: visible;
+}
 .markdown-preview-view .fc table {
   margin-bottom: 0px;
 }

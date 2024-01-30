@@ -1,6 +1,7 @@
 import { parseYaml } from "obsidian";
 import { EventSpec } from "./types";
 import { DateTime } from "luxon";
+import { isUndefined } from "./util";
 
 const DefaultTextColor = "white";
 const DefaultColor = "blue";
@@ -26,32 +27,44 @@ export function getEventInformation(fileData: string): EventSpec[] {
 }
 
 export function parseEventSpec(eventSpec: string): EventSpec {
-  const parsed = parseYaml(eventSpec);
+  const parsed: EventSpec = parseYaml(eventSpec);
 
   // Apply timezones to start/end times if provided
-  if (!parsed.allDay) {
-    if (parsed.start && (parsed.startTimeZone || parsed.timeZone)) {
+  if (!isUndefined(parsed.allDay) && !parsed.allDay) {
+    const startTimeZone = parsed.startTimeZone;
+    const timeZone = parsed.timeZone;
+    if (!isUndefined(parsed.start) && !isUndefined(startTimeZone)) {
       parsed.start = DateTime.fromISO(parsed.start, {
-        zone: parsed.startTimeZone || parsed.timeZone,
+        zone: startTimeZone,
+      }).toISO();
+    } else if (!isUndefined(parsed.start) && !isUndefined(timeZone)) {
+      parsed.start = DateTime.fromISO(parsed.start, {
+        zone: timeZone,
       }).toISO();
     }
-    if (parsed.end && (parsed.endTimeZone || parsed.timeZone)) {
+
+    const endTimeZone = parsed.endTimeZone;
+    if (!isUndefined(parsed.end) && !isUndefined(endTimeZone)) {
       parsed.end = DateTime.fromISO(parsed.end, {
-        zone: parsed.endTimeZone || parsed.timeZone,
+        zone: endTimeZone,
+      }).toISO();
+    } else if (!isUndefined(parsed.end) && !isUndefined(timeZone)) {
+      parsed.end = DateTime.fromISO(parsed.end, {
+        zone: endTimeZone,
       }).toISO();
     }
   }
 
-  if (!parsed.backgroundColor) {
+  if (isUndefined(parsed.backgroundColor)) {
     parsed.backgroundColor = parsed.color ?? DefaultColor;
   }
-  if (!parsed.borderColor) {
+  if (isUndefined(parsed.borderColor)) {
     parsed.borderColor = parsed.color ?? DefaultColor;
   }
-  if (!parsed.textColor) {
+  if (isUndefined(parsed.textColor)) {
     parsed.textColor = DefaultTextColor;
   }
-  if (!parsed.title) {
+  if (isUndefined(parsed.title)) {
     parsed.title = "Untitled Event";
   }
 

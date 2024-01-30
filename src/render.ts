@@ -5,18 +5,15 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import listPlugin from "@fullcalendar/list";
 import luxonPlugin from "@fullcalendar/luxon";
-
-import { compileExpression } from "filtrex";
 import { DateTime } from "luxon";
-
 import { EventSpec, ItinerarySpec } from "./types";
 import { getArrayForArrayOrObject } from "./util";
+import { isNull, isUndefined } from "./util";
 
 export class ItineraryRenderer extends MarkdownRenderChild {
   private messages: string[] = [];
   private loaded: boolean = false;
-  private calendar: Calendar;
-  private compiledFilters: ((item: Record<string, any>) => any)[] = [];
+  private calendar: Calendar | undefined;
   private sources: Record<string, EventSpec[]> = {};
 
   constructor(
@@ -25,12 +22,6 @@ export class ItineraryRenderer extends MarkdownRenderChild {
     private container: HTMLElement
   ) {
     super(container);
-    for (const [idx, filter] of getArrayForArrayOrObject(
-      this.spec.filter
-    ).entries()) {
-      this.compiledFilters.push(compileExpression(filter));
-      this.log(`Filter #${idx} '${filter}' compiled`);
-    }
   }
 
   async onload() {
@@ -61,23 +52,8 @@ export class ItineraryRenderer extends MarkdownRenderChild {
     return false;
   }
 
-  /** Returns whether selected event matches all provided filter specs. */
-  eventMatchesFilters(
-    evt: EventSpec,
-    filters: ((item: Record<string, any>) => any)[]
-  ): boolean {
-    for (const [idx, filter] of filters.entries()) {
-      if (!filter(evt)) {
-        this.log(`Event '${evt.title}' failed filter #${idx}`);
-        return false;
-      }
-    }
-    this.log(`Event '${evt.title}' passed all filters`);
-    return true;
-  }
-
-  log(message: any) {
-    if (this.spec.debug) {
+  log(message: string) {
+    if (!isUndefined(this.spec.debug) && this.spec.debug) {
       console.log(message);
       this.messages.push(message);
     }
@@ -87,14 +63,14 @@ export class ItineraryRenderer extends MarkdownRenderChild {
    * Updates the size of the underlying calendar.
    */
   public updateSize() {
-    this.calendar.updateSize();
+    if (!isUndefined(this.calendar)) {
+      this.calendar.updateSize();
+    }
   }
 
   async render() {
     try {
-      const events = Object.values(this.sources)
-        .flat()
-        .filter((evt) => this.eventMatchesFilters(evt, this.compiledFilters));
+      const events = Object.values(this.sources).flat();
 
       if (!this.calendar) {
         const calendarProps = { ...this.spec };
@@ -115,8 +91,8 @@ export class ItineraryRenderer extends MarkdownRenderChild {
       this.calendar.addEventSource(events);
       this.calendar.render();
 
-      setTimeout(() => this.calendar.updateSize(), 250);
-      if (this.spec.debug) {
+      setTimeout(() => this.updateSize(), 250);
+      if (!isUndefined(this.spec.debug) && this.spec.debug) {
         renderErrorPre(
           this.container,
           this.messages.join("\n"),
@@ -131,7 +107,10 @@ export class ItineraryRenderer extends MarkdownRenderChild {
 }
 
 export class EventRenderer extends MarkdownRenderChild {
-  constructor(private event: EventSpec, private container: HTMLElement) {
+  constructor(
+    private event: EventSpec,
+    private container: HTMLElement
+  ) {
     super(container);
   }
 
@@ -141,10 +120,11 @@ export class EventRenderer extends MarkdownRenderChild {
 
   async render() {
     try {
-      if (this.event.hidden) {
+      if (!isUndefined(this.event.hidden) && this.event.hidden) {
         // Remove all child nodes (in case we rendered them before)
-        while (this.container.firstChild) {
-          this.container.removeChild(this.container.firstChild);
+        const childNode = this.container.firstChild;
+        while (!isNull(childNode)) {
+          this.container.removeChild(childNode);
         }
       } else {
         const element = this.container.createEl("div", {
@@ -154,44 +134,47 @@ export class EventRenderer extends MarkdownRenderChild {
         const name = element.createEl("div", {
           cls: ["name"],
         });
-        name.style.backgroundColor = this.event.backgroundColor;
-        name.style.borderColor = this.event.borderColor;
-        name.style.color = this.event.textColor;
+        if (!isUndefined(this.event.backgroundColor)) {
+          name.style.backgroundColor = this.event.backgroundColor;
+        }
+        if (!isUndefined(this.event.borderColor)) {
+          name.style.borderColor = this.event.borderColor;
+        }
+        if (!isUndefined(this.event.textColor)) {
+          name.style.color = this.event.textColor;
+        }
         name.innerText = this.event.title;
 
         const dateStr = element.createEl("div", {
           cls: ["date"],
         });
-        let start: DateTime | null = null;
-        if (this.event.start) {
+        let start: DateTime = DateTime.now();
+        if (!isUndefined(this.event.start)) {
           start = DateTime.fromISO(this.event.start);
         }
         let end: DateTime | null = null;
-        if (this.event.end) {
+        if (!isUndefined(this.event.end)) {
           end = DateTime.fromISO(this.event.end);
         }
-        if (this.event.allDay) {
-          if (!end || end == start) {
-            dateStr.innerText = `${end.toLocaleString(
-              DateTime.DATE_FULL
-            )} (all day)`;
+        if (!isUndefined(this.event.allDay) && this.event.allDay) {
+          // An all day event render.
+          if (!isNull(end) && end.equals(start)) {
+            dateStr.innerText = `${end?.toLocaleString(DateTime.DATE_FULL)} (all day)`;
+          } else if (!isNull(end)) {
+            dateStr.innerText = `${start?.toLocaleString(DateTime.DATE_FULL)} - ${end.toLocaleString(DateTime.DATE_FULL)} (all day)`;
           } else {
-            dateStr.innerText = `${start.toLocaleString(
-              DateTime.DATE_FULL
-            )} - ${end.toLocaleString(DateTime.DATE_FULL)} (all day)`;
+            dateStr.innerText = `${start.toLocaleString(DateTime.DATE_FULL)} (all day)`;
           }
         } else {
           if (end) {
-            const zone = this.event.timeZone || this.event.endTimeZone;
-            if (zone) {
+            const zone = this.event.timeZone ?? this.event.endTimeZone;
+            if (!isUndefined(zone)) {
               end = end.setZone(zone);
             }
           }
-          if (start) {
-            const zone = this.event.timeZone || this.event.startTimeZone;
-            if (zone) {
-              start = start.setZone(zone);
-            }
+          const zone = this.event.timeZone ?? this.event.startTimeZone;
+          if (!isUndefined(zone)) {
+            start = start.setZone(zone);
           }
           if (!end || end == start) {
             dateStr.innerText = `${start.toLocaleString(

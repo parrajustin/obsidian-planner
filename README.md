@@ -132,7 +132,6 @@ And as a reward for your effort, you can then render calendars for your various 
 You can specify the following options for displaying your itinerary:
 
 - `source`: The name of an obsidian source (or list of obsidian source) to gather data from; note that this must be surrounded in quotes (e.g. `"[[My Vacation Plans]]"`).  Defaults to events found in the same file the calendar is rendered in.  This field also accepts a path relative to your vault root instead of an obsian source name, but using an obsidian source name is recommended since such a name can be autocompleted via the editor.
-- `filter`: A list of filter expressions (see "Expressions" below) or a single filter expression to use for limiting which rows of the referenced CSV will be displayed. If unspecified, all events found in the selected sources will be included.
 - `debug`: Will cause some debugging information to be printed below your rendered itinerary.
 
 In addition to the above, you can provide any options described here: https://fullcalendar.io/docs; particularly useful properties include:
@@ -165,12 +164,6 @@ Additionally, you can provide any options described here:  https://fullcalendar.
 
 - `color`: For marking your events in a particular color
 - `allDay`: For marking your event as an "all-day" event.
-
-### Expressions
-
-This library uses `filtrex` for expression evaluation; see their documentation to see more information about the expression syntax and what functions are available: https://github.com/m93a/filtrex#expressions.
-
-See "Filtering displayed rows" for an example of a filter expression in action, but realistically they work exactly as you'd probably expect.
 
 ## Tips
 
@@ -215,29 +208,6 @@ filter:
 - allDay
 ```
 ~~~
-
-### Filtering events based upon tag
-
-You can filter events based upon what tags are available easily, for example:
-
-~~~
-```itinerary
-filter:
-- '"hotel" in tag'
-```
-~~~
-
-or 
-
-~~~
-```itinerary
-filter:
-- '"hotel" not in tag'
-```
-~~~
-
-
-Note that the single quotes surrounding the whole expression are necessary given that this is a YAML document, and YAML documents have some parsing rules that make this just slightly awkward.
 
 ### Timezones
 
