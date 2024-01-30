@@ -187,8 +187,11 @@ export class EventRenderer extends MarkdownRenderChild {
           }
         }
 
+        const tagContainer = element.createEl("div", {
+          cls: ["tag-container"],
+        });
         for (const tagName of getArrayForArrayOrObject(this.event.tag)) {
-          const tag = element.createEl("div", {
+          const tag = tagContainer.createEl("div", {
             cls: ["tag"],
           });
           tag.innerText = tagName;
