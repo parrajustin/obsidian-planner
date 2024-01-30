@@ -5,3 +5,4 @@
 **/*.css
 
 main.js
+.eslintrc.js
