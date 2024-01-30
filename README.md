@@ -297,3 +297,10 @@ See [FullCalendar's docs](https://fullcalendar.io/docs/eventOrder) covering this
 ## Thanks
 
 This is all built upon the excellent [FullCalendar](https://fullcalendar.io/) javascript library.  If you want to give sombody thanks for the nice rendered calendars, they're the folks who deserve that.
+
+Or the original creator [Obsidian Itinerary](https://github.com/coddingtonbear/obsidian-itinerary) plugin.
+
+Or If you would like to say thanks or help support
+continued development, feel free to send a little my way through this:
+
+[<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="BuyMeACoffee" width="100">](https://www.buymeacoffee.com/parrajustin)

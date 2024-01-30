@@ -5,3 +5,5 @@
 
 main.js
 .eslintrc.js
+rollup.config.mjs
+jest.config.js
