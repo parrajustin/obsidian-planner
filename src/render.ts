@@ -83,6 +83,13 @@ export class ItineraryRenderer extends MarkdownRenderChild {
     }
   }
 
+  /**
+   * Updates the size of the underlying calendar.
+   */
+  public updateSize() {
+    this.calendar.updateSize();
+  }
+
   async render() {
     try {
       const events = Object.values(this.sources)

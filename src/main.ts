@@ -96,6 +96,16 @@ export default class Itinerary extends Plugin {
       this.app.vault.on("modify", this.onFileChange.bind(this))
     );
 
+    // Watches for resize event, on the event for any active itineraries upadate their size.
+    this.app.workspace.on('resize', () => {
+      if (this.app.workspace.activeEditor !== null && 
+        this.itineraries[this.app.workspace.activeEditor.file.path] !== undefined) {
+        for (let itinerary of this.itineraries[this.app.workspace.activeEditor.file.path]) {
+          itinerary.updateSize();
+        }
+      }
+    });
+
     this.registerMarkdownCodeBlockProcessor(
       "itinerary",
       async (itinerarySpecString: string, el, ctx) => {
