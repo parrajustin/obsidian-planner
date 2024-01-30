@@ -1,9 +1,9 @@
 {
-	"id": "obsidian-planner",
-	"name": "Planner",
-	"version": "0.1.0",
+	"id": "trip-planner",
+	"name": "Trip Planner",
+	"version": "0.2.0",
 	"minAppVersion": "1.0.3",
-	"description": "Make planning your trip or event easier by rendering a calendar from event information found in your notes.",
+	"description": "Easily plan your trip using event information from your notes.",
 	"author": "Justin Parra <contact@parrajust.in>",
 	"authorUrl": "https://parrajust.in/",
 	"fundingUrl": "https://www.buymeacoffee.com/parrajustin",

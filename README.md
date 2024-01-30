@@ -1,4 +1,4 @@
-# Obsidian Planner
+# Trip Planner
 
 Planning a vacation or need to otherwise see a set of events on a monthly, weekly, or daily calendar?  If so -- obsidian itinerary can help you keep your plans in order.
 
@@ -40,7 +40,7 @@ Hotel: Zócalo Central Hotel; check-in 3pm on November 4th, check-out by 10am on
 
 Mostly, though, it's up to your reading ability to keep track of what you have planned for each day, and it's really easy to lose track of things and put yourself into a situation where you forgot to book a hotel one night, or maybe had two conflicting events.
 
-Obsidian Itinerary helps with this by letting you specify events and event calendar displays using a simple format; e.g.:
+Trip planner helps with this by letting you specify events and event calendar displays using a simple format; e.g.:
 
 ~~~
 # Trip to Mexico
